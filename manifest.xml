@@ -1,0 +1,11 @@
+<package>
+    <description brief="publish/subscribe support of RTT ports on ROS topics">
+    </description>
+    <author>Ruben Smits, ruben.smits@mech.kuleuven.be</author>
+    <license>BSD</license>
+    <url>http://ros.org/wiki/rtt_rosnode</url>
+    <depend package="roslib"/>
+    <depend package="rtt"/>
+</package>
+
+
