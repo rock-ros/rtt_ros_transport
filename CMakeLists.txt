@@ -33,7 +33,7 @@ add_library(orocos-rtt-ros-${OROCOS_TARGET} SHARED
 configure_file(orocos-rtt-ros.pc.in orocos-rtt-ros-${OROCOS_TARGET}.pc
     @ONLY)
 
-install(FILES ros_publish_activity.hpp ros_msg_transporter.hpp
+install(FILES RosLib.hpp ros_publish_activity.hpp ros_msg_transporter.hpp
     DESTINATION include/rtt/transports/ros)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/orocos-rtt-ros-${OROCOS_TARGET}.pc
     DESTINATION lib/pkgconfig)
