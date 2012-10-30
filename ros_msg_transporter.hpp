@@ -54,18 +54,35 @@
 #include <rtt/TaskContext.hpp>
 #include <rtt/internal/ConnFactory.hpp>
 #include <ros/ros.h>
+#include <boost/type_traits/is_same.hpp>
 
 
 #include "ros_publish_activity.hpp"
 
 namespace ros_integration {
+  /** This is never going to be called, as a static comparison of types will
+   * always bypass this convertions calls
+   *
+   * It is there for non-optimizing cases where the call will still be emitted
+   * (but the branch never taken)
+   */
+  template <typename Msg>
+  void toROS(Msg& data, Msg const& msg) { }
+  /** This is never going to be called, as a static comparison of types will
+   * always bypass this convertion calls
+   *
+   * It is there for non-optimizing cases where the call will still be emitted
+   * (but the branch never taken)
+   */
+  template <typename Msg>
+  void fromROS(Msg& data, Msg const& msg) { }
 
   using namespace RTT;
   /**
    * A ChannelElement implementation to publish data over a ros topic
    * 
    */
-  template<typename T>
+  template<typename T,typename Msg>
   class RosPubChannelElement: public base::ChannelElement<T>,public RosPublisher
   {
     char hostname[1024];
@@ -74,6 +91,7 @@ namespace ros_integration {
     ros::Publisher ros_pub;
       //! We must cache the RosPublishActivity object.
     RosPublishActivity::shared_ptr act;
+    Msg msg;
 
   public:
 
@@ -101,7 +119,7 @@ namespace ros_integration {
       Logger::In in(topicname);
       log(Debug)<<"Creating ROS publisher for port "<<port->getInterface()->getOwner()->getName()<<"."<<port->getName()<<" on topic "<<policy.name_id<<endlog();
 
-      ros_pub = ros_node.advertise<T>(policy.name_id, policy.size ? policy.size : 1); // minimum 1
+      ros_pub = ros_node.advertise<Msg>(policy.name_id, policy.size ? policy.size : 1); // minimum 1
       act = RosPublishActivity::Instance();
       act->addPublisher( this );
     }
@@ -130,6 +148,8 @@ namespace ros_integration {
      */
     virtual bool data_sample(typename base::ChannelElement<T>::param_t sample)
     {
+      if (!boost::is_same<T,Msg>::value)
+        toROS(msg, sample);
       return true;
     }
 
@@ -143,22 +163,36 @@ namespace ros_integration {
       //log(Debug)<<"Requesting publish"<<endlog();
       return act->requestPublish(this);
     }
-    
+
+    template<typename SampleType>
+    void doPublishMsg(SampleType const& sample, typename boost::enable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    {
+      ros_pub.publish(sample);
+    }
+    template<typename SampleType>
+    void doPublishMsg(SampleType const& sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    {
+      toROS(msg, sample);
+      ros_pub.publish(msg);
+    }
+
     void publish(){
       typename base::ChannelElement<T>::value_t sample; // XXX: real-time !
       // this read should always succeed since signal() means 'data available in a data element'.
       typename base::ChannelElement<T>::shared_ptr input = this->getInput();
-      while( input && (input->read(sample,false) == NewData) )
-          ros_pub.publish(sample);
+      while( input && (input->read(sample,false) == NewData) ){
+        doPublishMsg(sample);
+      }
     }
     
   };
 
-  template<typename T>
+  template<typename T, typename Msg>
   class RosSubChannelElement: public base::ChannelElement<T>
   {
     ros::NodeHandle ros_node;
     ros::Subscriber ros_sub;
+    T sample;
     
   public:
     /** 
@@ -183,33 +217,44 @@ namespace ros_integration {
     virtual bool inputReady() {
       return true;
     }
+
+    template <typename MsgType>
+    void doWrite(typename base::ChannelElement<T>::shared_ptr& output, MsgType& msg, typename boost::enable_if< boost::is_same<T,MsgType> >::type* enabler=0){
+      output->write(msg);
+    }
+    template <typename MsgType>
+    void doWrite(typename base::ChannelElement<T>::shared_ptr& output, MsgType& msg, typename boost::disable_if< boost::is_same<T,MsgType> >::type* enabler=0){
+      fromROS(sample, msg);
+      output->write(sample);
+    }
     /** 
      * Callback function for the ROS subscriber, it will trigger the ChannelElement's signal function
      * 
      * @param msg The received message
      */
-    void newData(const T& msg){
+    void newData(const Msg& msg){
       typename base::ChannelElement<T>::shared_ptr output = this->getOutput();
-      if (output)
-          output->write(msg);
+      if (output){
+        doWrite(output, msg);
+      }
     }
   };
 
-    template <class T>
-    class RosMsgTransporter : public RTT::types::TypeTransporter{
-        virtual base::ChannelElementBase::shared_ptr createStream (base::PortInterface *port, const ConnPolicy &policy, bool is_sender) const{
-            base::ChannelElementBase* buf = internal::ConnFactory::buildDataStorage<T>(policy);
-            base::ChannelElementBase::shared_ptr tmp;
-            if(is_sender){
-                tmp = base::ChannelElementBase::shared_ptr(new RosPubChannelElement<T>(port,policy));
-                buf->setOutput(tmp);
-                return buf;
-            }
-            else {
-                tmp = new RosSubChannelElement<T>(port,policy);
-                tmp->setOutput(buf);
-                return tmp;
-            }
+  template <class T, class Msg>
+  class RosMsgTransporter : public RTT::types::TypeTransporter{
+    virtual base::ChannelElementBase::shared_ptr createStream (base::PortInterface *port, const ConnPolicy &policy, bool is_sender) const{
+      base::ChannelElementBase* buf = internal::ConnFactory::buildDataStorage<T>(policy);
+      base::ChannelElementBase::shared_ptr tmp;
+      if(is_sender){
+        tmp = base::ChannelElementBase::shared_ptr(new RosPubChannelElement<T,Msg>(port,policy));
+        buf->setOutput(tmp);
+        return buf;
+      }
+      else{
+        tmp = new RosSubChannelElement<T,Msg>(port,policy);
+        tmp->setOutput(buf);
+        return tmp;
+      }
     }
   };
 } 
