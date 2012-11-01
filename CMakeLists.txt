@@ -28,15 +28,17 @@ endif(NOT DEFINED ROS_FOUND)
 include_directories(${ROS_INCLUDE_DIRS})
 link_directories(${ROS_LIBRARY_DIRS})
 
-add_library(orocos-rtt-ros-${OROCOS_TARGET} SHARED
+add_library(rtt-transport-ros-${OROCOS_TARGET} SHARED
     ros_publish_activity.cpp)
 configure_file(orocos-rtt-ros.pc.in orocos-rtt-ros-${OROCOS_TARGET}.pc
+    @ONLY)
+configure_file(rtt-transport-ros-config.cmake.in rtt-transport-ros-config.cmake
     @ONLY)
 
 install(FILES RosLib.hpp ros_publish_activity.hpp ros_msg_transporter.hpp
     DESTINATION include/rtt/transports/ros)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/orocos-rtt-ros-${OROCOS_TARGET}.pc
     DESTINATION lib/pkgconfig)
-install(TARGETS orocos-rtt-ros-${OROCOS_TARGET}
-    DESTINATION lib)
+install(TARGETS rtt-transport-ros-${OROCOS_TARGET}
+    DESTINATION lib/orocos/${OROCOS_TARGET}/types)
 

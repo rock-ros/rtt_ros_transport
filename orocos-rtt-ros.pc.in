@@ -1,12 +1,12 @@
-prefix=@prefix@
+prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}  # defining another variable in terms of the first
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: Orocos-RTT-ROS                                     # human-readable name
 Description: Open Robot Control Software: Real-Time Tookit # human-readable description
-Requires: orocos-rtt-@OROCOS_TARGET@ roslib
+Requires: orocos-rtt-@OROCOS_TARGET@ roscpp
 Version: 2.5.0
-Libs: -L${libdir} -lorocos-rtt-ros-@OROCOS_TARGET@  @ROS_LIBRARIES@
-Cflags: -I${includedir}/rtt/transports/ros  
+Libs: -L${libdir}/orocos/@OROCOS_TARGET@/types -lrtt-transport-ros-@OROCOS_TARGET@
+Cflags: -I${includedir}/rtt
 

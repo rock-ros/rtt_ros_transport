@@ -1,0 +1,3 @@
+set(OROCOS-RTT_ROS_FOUND TRUE)
+set(FOUND_TRANSPORTS "${FOUND_TRANSPORTS} ros")
+set(RTT_PLUGIN_rtt-transport-ros_LIBRARY "@CMAKE_INSTALL_PREFIX@/lib/orocos-rtt-ros-${OROCOS_TARGET}_dynamic")
