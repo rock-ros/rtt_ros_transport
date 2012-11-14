@@ -36,6 +36,7 @@ configure_file(rtt-transport-ros-config.cmake.in rtt-transport-ros-config.cmake
     @ONLY)
 
 install(FILES RosLib.hpp ros_publish_activity.hpp ros_msg_transporter.hpp
+    ros_convertions.hpp
     DESTINATION include/rtt/transports/ros)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/orocos-rtt-ros-${OROCOS_TARGET}.pc
     DESTINATION lib/pkgconfig)

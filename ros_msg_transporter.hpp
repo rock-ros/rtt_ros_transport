@@ -56,7 +56,7 @@
 #include <ros/ros.h>
 #include <boost/type_traits/is_same.hpp>
 
-
+#include "ros_convertions.hpp"
 #include "ros_publish_activity.hpp"
 
 namespace ros_integration {
@@ -146,6 +146,10 @@ namespace ros_integration {
     bool doDataSample(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
       try { toROS(msg, sample); }
+      catch(InvalidROSConvertion const& e)  {
+        log(Warning) << "faile to convert sample to ROS: " << e.what() << endlog();
+        return false;
+      }
       return true;
     }
 
@@ -199,7 +203,12 @@ namespace ros_integration {
     template<typename SampleType>
     void doPublishMsg(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
-      toROS(msg, sample);
+      try { toROS(msg, sample); }
+      catch(InvalidROSConvertion const& e)  {
+        log(Warning) << "failed to convert sample to ROS: " << e.what() << endlog();
+        return;
+      }
+
       ros_pub.publish(msg);
     }
 
@@ -251,7 +260,12 @@ namespace ros_integration {
     }
     template <typename MsgType>
     void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType const& msg, typename boost::disable_if< boost::is_same<T,MsgType> >::type* enabler=0){
-      fromROS(sample, msg);
+      try { fromROS(sample, msg); }
+      catch(InvalidROSConvertion const& e)  {
+        log(Warning) << "failed to convert sample from ROS: " << e.what() << endlog();
+        return;
+      }
+
       output->write(sample);
     }
     /** 
