@@ -137,6 +137,27 @@ namespace ros_integration {
     virtual bool inputReady() {
       return true;
     }
+
+    /**
+     * Helper function for data_sample. It allows to differentiate the case
+     * where SampleType == MsgType from SampleType != MsgType
+     */
+    template<typename SampleType>
+    bool doDataSample(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    {
+      try { toROS(msg, sample); }
+      return true;
+    }
+
+    /**
+     * Helper function for data_sample. It allows to differentiate the case
+     * where SampleType == MsgType from SampleType != MsgType
+     */
+    template<typename SampleType>
+    bool doDataSample(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::enable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    {
+      return true;
+    }
     
     /** 
      * Create a data sample, this could be used to allocate the necessary memory, it is not needed in our case
@@ -147,9 +168,7 @@ namespace ros_integration {
      */
     virtual bool data_sample(typename RTT::base::ChannelElement<T>::param_t sample)
     {
-      if (!boost::is_same<T,Msg>::value)
-        toROS(msg, sample);
-      return true;
+      return doDataSample<T>(sample);
     }
 
     /** 
@@ -163,13 +182,22 @@ namespace ros_integration {
       return act->requestPublish(this);
     }
 
+    /**
+     * Helper function for publish. It allows to differentiate the case
+     * where SampleType == MsgType from SampleType != MsgType
+     */
     template<typename SampleType>
-    void doPublishMsg(SampleType const& sample, typename boost::enable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    void doPublishMsg(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::enable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
       ros_pub.publish(sample);
     }
+
+    /**
+     * Helper function for publish. It allows to differentiate the case
+     * where SampleType == MsgType from SampleType != MsgType
+     */
     template<typename SampleType>
-    void doPublishMsg(SampleType const& sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
+    void doPublishMsg(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
       toROS(msg, sample);
       ros_pub.publish(msg);
@@ -180,7 +208,7 @@ namespace ros_integration {
       // this read should always succeed since signal() means 'data available in a data element'.
       typename RTT::base::ChannelElement<T>::shared_ptr input = this->getInput();
       while( input && (input->read(sample,false) == NewData) ){
-        doPublishMsg(sample);
+        doPublishMsg<T>(sample);
       }
     }
     
@@ -218,11 +246,11 @@ namespace ros_integration {
     }
 
     template <typename MsgType>
-    void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType& msg, typename boost::enable_if< boost::is_same<T,MsgType> >::type* enabler=0){
+    void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType const& msg, typename boost::enable_if< boost::is_same<T,MsgType> >::type* enabler=0){
       output->write(msg);
     }
     template <typename MsgType>
-    void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType& msg, typename boost::disable_if< boost::is_same<T,MsgType> >::type* enabler=0){
+    void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType const& msg, typename boost::disable_if< boost::is_same<T,MsgType> >::type* enabler=0){
       fromROS(sample, msg);
       output->write(sample);
     }
