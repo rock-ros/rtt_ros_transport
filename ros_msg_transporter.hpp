@@ -59,7 +59,7 @@
 #include "ros_convertions.hpp"
 #include "ros_publish_activity.hpp"
 
-namespace ros_integration {
+namespace ros_convertions {
   /** This is never going to be called, as a static comparison of types will
    * always bypass this convertions calls
    *
@@ -76,7 +76,11 @@ namespace ros_integration {
    */
   template <typename Msg>
   void fromROS(Msg& data, Msg const& msg) { }
+}
 
+namespace RTT {
+namespace ros {
+  using namespace ::ros;
   /**
    * A ChannelElement implementation to publish data over a ros topic
    * 
@@ -145,8 +149,8 @@ namespace ros_integration {
     template<typename SampleType>
     bool doDataSample(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
-      try { toROS(msg, sample); }
-      catch(InvalidROSConvertion const& e)  {
+      try { ros_convertions::toROS(msg, sample); }
+      catch(ros_convertions::InvalidROSConvertion const& e)  {
         log(Warning) << "faile to convert sample to ROS: " << e.what() << endlog();
         return false;
       }
@@ -203,8 +207,8 @@ namespace ros_integration {
     template<typename SampleType>
     void doPublishMsg(typename RTT::base::ChannelElement<T>::param_t sample, typename boost::disable_if< boost::is_same<SampleType,Msg> >::type* enabler=0)
     {
-      try { toROS(msg, sample); }
-      catch(InvalidROSConvertion const& e)  {
+      try { ros_convertions::toROS(msg, sample); }
+      catch(ros_convertions::InvalidROSConvertion const& e)  {
         log(Warning) << "failed to convert sample to ROS: " << e.what() << endlog();
         return;
       }
@@ -260,8 +264,8 @@ namespace ros_integration {
     }
     template <typename MsgType>
     void doWrite(typename RTT::base::ChannelElement<T>::shared_ptr& output, MsgType const& msg, typename boost::disable_if< boost::is_same<T,MsgType> >::type* enabler=0){
-      try { fromROS(sample, msg); }
-      catch(InvalidROSConvertion const& e)  {
+      try { ros_convertions::fromROS(sample, msg); }
+      catch(ros_convertions::InvalidROSConvertion const& e)  {
         log(Warning) << "failed to convert sample from ROS: " << e.what() << endlog();
         return;
       }
@@ -298,5 +302,5 @@ namespace ros_integration {
       }
     }
   };
-} 
+}} // namespace RTT::ros
 #endif

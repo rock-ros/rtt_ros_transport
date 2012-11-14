@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-namespace ros_integration
+namespace ros_convertions
 {
     struct InvalidROSConvertion : public std::runtime_error
     {

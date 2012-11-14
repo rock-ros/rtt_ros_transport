@@ -29,6 +29,4 @@
 
 #include "ros_publish_activity.hpp"
 
-namespace ros_integration {
-  RosPublishActivity::weak_ptr RosPublishActivity::ros_pub_act;
-}
+RTT::ros::RosPublishActivity::weak_ptr RTT::ros::RosPublishActivity::ros_pub_act;

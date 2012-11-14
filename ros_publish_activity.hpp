@@ -37,9 +37,8 @@
 
 #include <ros/ros.h>
 
-namespace ros_integration{
-  using namespace RTT;
-  
+namespace RTT{
+namespace ros{
     /**
      * The interface a channel element must implement in
      * order to publish data to a ROS topic.
@@ -145,6 +144,6 @@ namespace ros_integration{
       }
       
   };//class
-}//namespace
+}}//namespace
 #endif
 
