@@ -292,12 +292,12 @@ namespace ros {
         RTT::base::ChannelElementBase::shared_ptr tmp;
       if(is_sender){
         tmp = RTT::base::ChannelElementBase::shared_ptr(new RosPubChannelElement<T,Msg>(port,policy));
-        buf->setOutput(tmp);
+        buf->connectTo(tmp);
         return buf;
       }
       else{
         tmp = new RosSubChannelElement<T,Msg>(port,policy);
-        tmp->setOutput(buf);
+        tmp->connectTo(buf);
         return tmp;
       }
     }
