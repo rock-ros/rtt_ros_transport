@@ -297,7 +297,7 @@ namespace ros {
       }
       else{
         tmp = new RosSubChannelElement<T,Msg>(port,policy);
-        tmp->connectTo(buf);
+        tmp->connectFrom(buf);
         return tmp;
       }
     }
