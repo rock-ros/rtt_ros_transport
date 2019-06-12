@@ -4,7 +4,7 @@
     <author>Ruben Smits, ruben.smits@mech.kuleuven.be</author>
     <license>BSD</license>
     <url>http://ros.org/wiki/rtt_rosnode</url>
-    <depend package="roslib"/>
+
     <depend package="rtt"/>
 </package>
 

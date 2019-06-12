@@ -22,11 +22,12 @@ link_directories(${OROCOS-RTT_LIBRARY_DIRS})
 add_definitions(${OROCOS-RTT_DEFINITIONS})
 
 if(NOT DEFINED ROS_FOUND)
-    find_package( ROS QUIET REQUIRED COMPONENTS roslib )
+	#    find_package( ROS QUIET REQUIRED COMPONENTS roslib )
+	find_package( roscpp )
 endif(NOT DEFINED ROS_FOUND)
 
-include_directories(${ROS_INCLUDE_DIRS})
-link_directories(${ROS_LIBRARY_DIRS})
+include_directories(${roscpp_INCLUDE_DIRS})
+link_directories(${roscpp_LIBRARY_DIRS})
 
 add_library(rtt-transport-ros-${OROCOS_TARGET} SHARED
     ros_publish_activity.cpp)

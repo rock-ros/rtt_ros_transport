@@ -291,13 +291,22 @@ namespace ros {
         RTT::base::ChannelElementBase* buf = internal::ConnFactory::buildDataStorage<T>(policy);
         RTT::base::ChannelElementBase::shared_ptr tmp;
       if(is_sender){
+        
         tmp = RTT::base::ChannelElementBase::shared_ptr(new RosPubChannelElement<T,Msg>(port,policy));
+#if(RTT_VERSION_MAJOR >= 2 && RTT_VERSION_MINOR >= 8 && RTT_VERSION_PATCH >= 99)
+        buf->connectTo(tmp);
+#else
         buf->setOutput(tmp);
+#endif
         return buf;
       }
       else{
         tmp = new RosSubChannelElement<T,Msg>(port,policy);
-        tmp->setOutput(buf);
+#if(RTT_VERSION_MAJOR >= 2 && RTT_VERSION_MINOR >= 8 && RTT_VERSION_PATCH >= 99)
+        tmp->connectFrom(buf);
+#else
+        buf->setOutput(tmp);
+#endif
         return tmp;
       }
     }
